@@ -5,14 +5,13 @@ setwd('/home/lj/ML/Zillow/')
 dat <- read.csv("Transactions.csv")
 
 nrw <- nrow(dat)
-extremeVals <- list()
 
 data_by_region <- group_by(dat, regionid)
-means <- summarise(data_by_region, transvalue=mean(transvalue, na.rm=TRUE), bathroomcnt=mean(bathroomcnt, na.rm=TRUE), bedroomcnt=mean(bedroomcnt, na.rm=TRUE), finishedsquarefeet=mean(finishedsquarefeet, na.rm=TRUE), lotsizesquarefeet=mean(lotsizesquarefeet, na.rm=TRUE))
+medians <- summarise(data_by_region, transvalue=median(transvalue, na.rm=TRUE), bathroomcnt=median(bathroomcnt, na.rm=TRUE), bedroomcnt=median(bedroomcnt, na.rm=TRUE), finishedsquarefeet=median(finishedsquarefeet, na.rm=TRUE), lotsizesquarefeet=median(lotsizesquarefeet, na.rm=TRUE))
 sds <- summarise(data_by_region, transvalue=sd(transvalue, na.rm=TRUE), bathroomcnt=sd(bathroomcnt, na.rm=TRUE), bedroomcnt=sd(bedroomcnt, na.rm=TRUE), finishedsquarefeet=sd(finishedsquarefeet, na.rm=TRUE), lotsizesquarefeet=sd(lotsizesquarefeet, na.rm=TRUE))
-rownames(means) <- means$regionid
+rownames(medians) <- medians$regionid
 rownames(sds) <- sds$regionid
-means <- means[, 2:6]
+medians <- medians[, 2:6]
 sds <- sds[,2:6]
 col_names <- c('transvalue', 'bathroomcnt', 'bedroomcnt', 'finishedsquarefeet', 'lotsizesquarefeet')
 
@@ -20,14 +19,65 @@ dat$isExtreme=FALSE
 
 checkExtreme <- function(x) {  
   regionid <- as.character(x['regionid'])
-  diff <- abs(x[col_names] - means[regionid,])
+  diff <- abs(x[col_names] - medians[regionid,])
   extreme = diff > 2*sds[regionid,]
-  if (any(extreme==TRUE)) {
-    x$isExtreme = TRUE
+  if (any(is.na(extreme))) {
+    x$isExtreme <- NA
+  }
+  else if (any(extreme==TRUE)) {
+    x$isExtreme <- TRUE
+  }
+  return(x)
+}
+
+#apply(dat, 1, checkExtreme)
+for (i in 1:nrw) {
+  dat[i,] <- checkExtreme(dat[i,])
+}
+
+write.csv(dat[,c('propertyid', 'isExtreme')], file="yourPathHere2")
+
+
+if (FALSE) {
+r <- list()
+for (i in 1:length(diff)) {
+  if (is.na(diff[i])) {
+    r <- c(r, i)
+  }
+  else if (diff[i]==FALSE) {
+    r <- c(r, i)
   }
 }
 
-checkExtreme(tmp)
+r <- list()
 
-apply(dat, 1, checkExtreme)
+for (i in 1:length(diff)) {
+  if (!is.na(diff[i]) & diff[i]!=TRUE) {
+    print (i)
+    r <- c(r, i)
+    
+  }
+}
 
+for (i in 1:length(r)) {
+i = 1
+  idx <- as.numeric(r[i])
+  print (dat[idx,])
+  print (a[idx,])
+i = i + 1
+}
+regionid <- as.character(dat[idx, 'regionid'])
+difference <- abs(d[col_names] - medians[regionid,])
+
+d$transvalue > medians[regionid, 'transvalue'] + 2*sds[regionid, 'transvalue']
+d$bathroomcnt > medians[regionid, 'bathroomcnt'] + 2*sds[regionid, 'bathroomcnt']
+d$bedroomcnt > medians[regionid, 'bedroomcnt'] + 2*sds[regionid, 'bedroomcnt']
+d$finishedsquarefeet > medians[regionid, 'finishedsquarefeet'] + 2*sds[regionid, 'finishedsquarefeet']
+d$lotsizesquarefeet > medians[regionid, 'lotsizesquarefeet'] + 2*sds[regionid, 'lotsizesquarefeet']
+
+d$transvalue < medians[regionid, 'transvalue'] - 2*sds[regionid, 'transvalue']
+d$bathroomcnt < medians[regionid, 'bathroomcnt'] - 2*sds[regionid, 'bathroomcnt']
+d$bedroomcnt < medians[regionid, 'bedroomcnt'] - 2*sds[regionid, 'bedroomcnt']
+d$finishedsquarefeet < medians[regionid, 'finishedsquarefeet'] - 2*sds[regionid, 'finishedsquarefeet']
+d$lotsizesquarefeet < medians[regionid, 'lotsizesquarefeet'] - 2*sds[regionid, 'lotsizesquarefeet']
+}
