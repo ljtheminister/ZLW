@@ -1,11 +1,13 @@
 library(dplyr)
 library(data.table)
 
+# Set working directory and read data 
 setwd('/home/lj/ML/Zillow/')
 dat <- read.csv("Transactions.csv")
 
 nrw <- nrow(dat)
 
+# Get median and standard deviations by regionid
 data_by_region <- group_by(dat, regionid)
 medians <- summarise(data_by_region, transvalue=median(transvalue, na.rm=TRUE), bathroomcnt=median(bathroomcnt, na.rm=TRUE), bedroomcnt=median(bedroomcnt, na.rm=TRUE), finishedsquarefeet=median(finishedsquarefeet, na.rm=TRUE), lotsizesquarefeet=median(lotsizesquarefeet, na.rm=TRUE))
 sds <- summarise(data_by_region, transvalue=sd(transvalue, na.rm=TRUE), bathroomcnt=sd(bathroomcnt, na.rm=TRUE), bedroomcnt=sd(bedroomcnt, na.rm=TRUE), finishedsquarefeet=sd(finishedsquarefeet, na.rm=TRUE), lotsizesquarefeet=sd(lotsizesquarefeet, na.rm=TRUE))
@@ -15,8 +17,10 @@ medians <- medians[, 2:6]
 sds <- sds[,2:6]
 col_names <- c('transvalue', 'bathroomcnt', 'bedroomcnt', 'finishedsquarefeet', 'lotsizesquarefeet')
 
-dat$isExtreme=FALSE
+# Check for Extreme Values
+dat$isExtreme=FALSE # set everything to FALSE by default
 
+# checkExtreme: a function that checks a row whether one of its values is extreme aka more than 2 standard deviations away
 checkExtreme <- function(x) {  
   regionid <- as.character(x['regionid'])
   diff <- abs(x[col_names] - medians[regionid,])
@@ -30,14 +34,14 @@ checkExtreme <- function(x) {
   return(x)
 }
 
-#apply(dat, 1, checkExtreme)
+#apply(dat, 1, checkExtreme) Apply doesn't work here, so I use the for loop
 for (i in 1:nrw) {
   dat[i,] <- checkExtreme(dat[i,])
 }
 
 write.csv(dat[,c('propertyid', 'isExtreme')], file="yourPathHere2")
 
-
+## TESTING TO SEE IT'S RIGHT
 if (FALSE) {
 r <- list()
 for (i in 1:length(diff)) {

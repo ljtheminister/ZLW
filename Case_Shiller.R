@@ -49,7 +49,7 @@ min_year <- year(min_date)
 # annual time periods
 data$t0 <- year(data$transdate_previous) - min_year + 1
 data$t1 <- year(data$transdate) - min_year + 1
-
+# take logarithm of prices
 data$p1 <- log(data$transvalue)
 data$p0 <- log(data$transvalue_previous)
 
@@ -76,7 +76,7 @@ e <- residuals(fit1) # take the residuals
 data$saletime <- data$t1 - data$t0 # compute interval time between sales
 # Step 2: Fit residuals
 fit2 <- lm(e^2 ~ data$saletime) # regress sqiared residuals against gap time
-w <- fitted(fit2)
+w <- fitted(fit2) # take fitted coefficients
 w <- ifelse(w>0, 1/sqrt(w), 0) # make non-negative, take reciprocal of sqrt of fitted values - estimated standard deviations used
 # Step 3: Weighted Least Squares regression
 fit_CS <- lm(dy ~ X + 0, weights=w)
